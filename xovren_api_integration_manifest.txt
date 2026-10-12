@@ -1,0 +1,43 @@
+# XOVREN SUPER INTELLIGENCE (SI) SYSTEM ENGINE
+# INTEGRATION MANIFEST FOR N-ATLAS MULTI-DIALECT IVR PIPELINE
+# ARCHITECT: ISHOLA ENIOLA | KINGS EMBEDDED SOLUTIONS LTD
+
+import os
+import requests
+
+class XovrenConnectRouter:
+    def __init__(self):
+        self.natlas_asr_url = "https://n-atlas.gov.ng"
+        self.natlas_llm_url = "https://n-atlas.gov.ng"
+        self.api_key = os.getenv("NATLAS_API_KEY", "PENDING_NAIC_ACTIVATION")
+        self.headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+
+    def route_voice_intent(self, audio_payload, target_dialect):
+        """
+        Streams inbound cellular voice audio directly to N-ATLAS ASR,
+        extracts local text arrays, and updates the vector memory ledger.
+        """
+        # Step 1: Process phonetic audio tokens through N-ATLAS ASR
+        asr_response = requests.post(
+            self.natlas_asr_url, 
+            headers=self.headers, 
+            files={"audio": audio_payload},
+            data={"dialect": target_dialect}
+        )
+        dialect_text = asr_response.json().get("transcript")
+        
+        # Step 2: Route parsed dialect text to N-ATLAS LLM for intent extraction
+        llm_payload = {
+            "model": "n-atlas-v1-base",
+            "messages": [
+                {"role": "system", "content": "Extract commercial intent, value, and beneficiary codes."},
+                {"role": "user", "content": dialect_text}
+            ],
+            "temperature": 0.0
+        }
+        
+        llm_response = requests.post(self.natlas_llm_url, headers=self.headers, json=llm_payload)
+        return llm_response.json()
+
+# INITIALIZATION LOG
+print("[XOVREN_NATLAS_PATCH]: Core IVR Pipeline Configured. Ready for baseline token handshake.")
